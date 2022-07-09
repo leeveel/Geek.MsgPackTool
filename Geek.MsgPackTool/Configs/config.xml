@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-  <project-path>F:\github\leeveel\GeekServerMPC\GeekServer.Proto</project-path> <!-- proto project path-->
-  <server-out-path>F:\github\leeveel\GeekServerMPC\GeekServer.Generate\Proto\</server-out-path> <!-- 服务器代码导出路径 -->
-  <client-out-path>F:\github\leeveel\GeekServer\UnityDemo\Assets\Scripts\Generate\Proto\</client-out-path><!-- 客户端代码导出路径-->
+  <project-path>..\Geek.Proto</project-path> <!-- proto project path-->
+  <server-out-path>..\Output</server-out-path> <!-- 服务器代码导出路径 -->
+  <client-out-path>..\Output</client-out-path><!-- 客户端代码导出路径-->
 </config>
