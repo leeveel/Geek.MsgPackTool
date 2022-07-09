@@ -1,0 +1,24 @@
+using MessagePack;
+
+namespace {{space}}
+{
+	[MessagePackObject]
+	public class {{name}} {{super}}
+	{
+		[IgnoreMember]
+		public const int Sid = {{sid}};
+		{{~ if ismsg~}}
+		[IgnoreMember]
+		public const int MsgID = Sid;
+		[IgnoreMember]
+		public override int MsgId => MsgID;
+		{{~ end ~}}
+
+		{{~ for field in fields ~}}
+		{{~ for att in field.attributes ~}}
+		[{{att}}]
+		{{~ end ~}}
+		public {{field.clsname}} {{field.name}} {get;set;}
+		{{~ end ~}}
+	}
+}
