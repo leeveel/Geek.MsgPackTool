@@ -1,5 +1,6 @@
 ﻿using NLog;
 using NLog.Config;
+using System.Text.RegularExpressions;
 
 namespace Geek.MsgPackTool
 {
@@ -9,7 +10,6 @@ namespace Geek.MsgPackTool
 
         static void Main(string[] args)
         {
-
             LogManager.Configuration = new XmlLoggingConfiguration("Configs/NLog.config");
             LOGGER.Info("Geek.MsgPackTool start....");
 
@@ -54,6 +54,7 @@ namespace Geek.MsgPackTool
             //mpcArgument.Input = @"F:\github\leeveel\GeekServerMPC\GeekServer.Proto";
             //mpcArgument.Output = @"F:\github\leeveel\GeekServerMPC\GeekServer.Generate\Proto";
             mpcArgument.Input = Setting.ProjectPath;
+            mpcArgument.AutoNew = Setting.AutoNew; 
             if (model == 1)
             {
                 mpcArgument.ServerOutput = Setting.ServerOutPath;
@@ -81,7 +82,10 @@ namespace Geek.MsgPackTool
             try
             {
                 var log = await ProcessHelper.InvokeProcessStartAsync("mpc", commnadLineArguments);
-                Console.WriteLine(log);
+                if (log.Contains("System.Exception"))
+                    log.WriteErrorLine();
+                else
+                    log.WriteSuccessLine();
             }
             finally
             {

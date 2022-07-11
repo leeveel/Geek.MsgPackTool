@@ -19,6 +19,11 @@ namespace Geek.MsgPackTool
         /// </summary>
         public static string ClientOutPath { private set; get; }
 
+        /// <summary>
+        /// 对于容器类型在生成代码时，是否直接new好
+        /// </summary>
+        public static bool AutoNew { private set; get; }
+
         public static bool Init()
         {
             if (File.Exists("Configs/config.xml"))
@@ -39,6 +44,9 @@ namespace Geek.MsgPackTool
                             break;
                         case "client-out-path":
                             ClientOutPath = node.InnerText;
+                            break;
+                        case "auto-new":
+                            AutoNew = bool.Parse(node.InnerText);
                             break;
                     }
                 }

@@ -8,19 +8,41 @@ namespace MessagePackCompiler
     /// </summary>
     public class ClassTemplate
     {
+        public string fullname { get; set; }
         public string name { get; set; }
         public bool ismsg { get; set; }
         public string space { get; set; }
+        public string super { get; set; }
+
         /// <summary>
         /// 需要包含冒号
         /// </summary>
-        public string super { get; set; }
+        public string supercode
+        {
+            get 
+            {
+                if(string.IsNullOrEmpty(super))
+                    return string.Empty;
+                else
+                    return ": " + super;
+            }
+        }
+
 
         public int sid { get; set; }
 
         public string atts{ get; set; }
 
         public List<FieldTemplate> fields = new List<FieldTemplate>();
+
+        /// <summary>
+        /// 添加了Key注解的字段
+        /// </summary>
+        public int sfieldcount = 0;
+
+        public bool autonew { get; set; }
+
+        public List<string> usings = new List<string>();
     }
 
     public class FieldTemplate
@@ -29,7 +51,16 @@ namespace MessagePackCompiler
 
         public string name { get; set; }
 
+        public int order { get; set; }
+
         public List<string> attributes = new List<string>();
+
+        public Dictionary<int, string> orderdic = new Dictionary<int, string>();
+
+        public string propcode
+        {
+            get { return orderdic[order]; }
+        }
     }
 
     public class PolymorphicInfo

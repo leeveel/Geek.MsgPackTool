@@ -1,9 +1,13 @@
-using MessagePack;
+//auto generated, do not modify it
+
+{{~ for using in usings ~}}
+using {{using}};
+{{~ end ~}}
 
 namespace {{space}}
 {
 	[MessagePackObject]
-	public class {{name}} {{super}}
+	public class {{name}} {{supercode}}
 	{
 		[IgnoreMember]
 		public const int Sid = {{sid}};
@@ -15,10 +19,7 @@ namespace {{space}}
 		{{~ end ~}}
 
 		{{~ for field in fields ~}}
-		{{~ for att in field.attributes ~}}
-		[{{att}}]
-		{{~ end ~}}
-		public {{field.clsname}} {{field.name}} {get;set;}
+   {{~field.propcode~}}
 		{{~ end ~}}
 	}
 }

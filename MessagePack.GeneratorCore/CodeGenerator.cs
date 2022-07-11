@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using MessagePackCompiler.CodeAnalysis;
 using MessagePackCompiler.Generator;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Editing;
 
 namespace MessagePackCompiler
 {
@@ -43,6 +45,7 @@ namespace MessagePackCompiler
            Compilation compilation,
            string output,
            string serverOutput,
+           bool autoNew,
            string resolverName,
            string? @namespace,
            bool useMapMode,
@@ -68,7 +71,7 @@ namespace MessagePackCompiler
                 var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect();
 
                 //生成协议代码
-                GeekGenerator.Singleton.GenCode(collector.TargetTypes, serverOutput, output);
+                GeekGenerator.Singleton.GenCode(compilation, collector.TargetTypes, serverOutput, output, autoNew);
 
                 logger("Method Collect Complete:" + sw.Elapsed.ToString());
 
