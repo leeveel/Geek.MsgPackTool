@@ -51,7 +51,9 @@ namespace MessagePackCompiler
 
         public string name { get; set; }
 
-        public int order { get; set; }
+        public int order { get; set; } = -1;
+
+        public bool ignore { get; set; }
 
         public List<string> attributes = new List<string>();
 
@@ -59,8 +61,14 @@ namespace MessagePackCompiler
 
         public string propcode
         {
-            get { return orderdic[order]; }
+            get 
+            {
+                if (ignore)
+                    return ignorepropcode;
+                return orderdic[order]; 
+            }
         }
+        public string ignorepropcode { get; set; }
     }
 
     public class PolymorphicInfo

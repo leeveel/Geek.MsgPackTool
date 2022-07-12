@@ -124,6 +124,11 @@ namespace MessagePackCompiler
                                 ftemp.orderdic.Add(ftemp.order, GetPropertyCode(ftemp.name, clsSyntaxDic[clsTemp.fullname]));
                             }
                         }
+                        else
+                        {
+                            ftemp.ignore = true;
+                            ftemp.ignorepropcode = GetPropertyCode(ftemp.name, clsSyntaxDic[clsTemp.fullname]);
+                        }
                     }
                     clsTemp.fields.Add(ftemp);
                 }
@@ -148,8 +153,10 @@ namespace MessagePackCompiler
 
             //清除并创建目录
             output.CreateDirectory();
-
-
+            if (!output.Equals("no"))
+                output.CreateDirectory();
+            if (!clientOutput.Equals("no"))
+                clientOutput.CreateDirectory();
 
             //MsgFactory
             Template msgTemp = Template.Parse(File.ReadAllText("Geek/MsgFactory.liquid"));
@@ -190,17 +197,30 @@ namespace MessagePackCompiler
             foreach (var cls in list)
             {
                 int temp = 0;
+                bool first = true;
                 for (int i = 0; i < cls.fields.Count; i++)
                 {
-                    if (i == 0)
+                    if (cls.fields[i].ignore)
                     {
-                        temp = cls.fields[i].order;
-                        if (temp != 0)
-                            throw new Exception($"key must start from zero : {cls.fullname}");
+                        continue;
                     }
-                    else if (temp + i != cls.fields[i].order)
+                    else
                     {
-                        throw new Exception($"keys must be sequenece : {cls.fullname}");
+                        if (first)
+                        {
+                            first = false;
+                            temp = cls.fields[i].order;
+                            if (temp != 0)
+                                throw new Exception($"key must start from zero : {cls.fullname}");
+                        }
+                        else if (++temp != cls.fields[i].order)
+                        {
+                            foreach (var f in cls.fields)
+                            {
+                                Console.WriteLine(f.order);
+                            }
+                            throw new Exception($"keys must be sequenece : {cls.fullname}");
+                        }
                     }
                 }
             }
@@ -220,6 +240,8 @@ namespace MessagePackCompiler
             int order = GetStartOrder(cls);
             foreach (var field in cls.fields)
             {
+                if (field.ignore)
+                    continue;
                 //field.attributes.Add($"Key({order++})");
                 //var after = field.orderdic[field.order].Replace($"Key({field.order})", $"Key({order++})");
                 //field.orderdic[field.order] = after;
