@@ -19,9 +19,12 @@ namespace MessagePackCompiler
 
         public static GeekGenerator Singleton = new GeekGenerator();
         //sub - parent
-        private Dictionary<string, ClassTemplate> clsDid = new Dictionary<string, ClassTemplate>();
-        private Dictionary<int, string> sidDic = new Dictionary<int, string>();
-        private Dictionary<string, ClassDeclarationSyntax> clsSyntaxDic = new Dictionary<string, ClassDeclarationSyntax>();
+        private readonly Dictionary<string, ClassTemplate> clsDid = new Dictionary<string, ClassTemplate>();
+        private readonly Dictionary<int, string> sidDic = new Dictionary<int, string>();
+        private readonly Dictionary<string, ClassDeclarationSyntax> clsSyntaxDic = new Dictionary<string, ClassDeclarationSyntax>();
+        private readonly PolymorphicInfoFactory polymorphicInfos = new PolymorphicInfoFactory();
+        private readonly MsgFactory msgFactory = new MsgFactory();
+        private readonly List<ClassTemplate> clsTemps = new List<ClassTemplate>();
 
         public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output, string clientOutput, bool autoNew)
         {
@@ -30,9 +33,6 @@ namespace MessagePackCompiler
             ClassTemplate baseMsg = new ClassTemplate();
             baseMsg.fullname = BaseMessage;
             clsDid.Add(BaseMessage, baseMsg);
-
-            List<ClassTemplate> list = new List<ClassTemplate>();
-            PolymorphicInfoFactory polymorphicInfos = new PolymorphicInfoFactory();
 
             foreach (var type in targetTypes)
             {
@@ -131,18 +131,35 @@ namespace MessagePackCompiler
                 //以order为标准对字段进行重排序
                 clsTemp.fields.OrderBy(f => f.order);
 
-                list.Add(clsTemp);
+                clsTemps.Add(clsTemp);
                 clsDid.Add(clsTemp.fullname, clsTemp);
+
+                MsgInfo msg = new MsgInfo();
+                msg.sid = clsTemp.sid;
+                msg.typename = clsTemp.fullname;
+                msgFactory.msgs.Add(msg);
             }
 
             //检查key是否合法
-            CheckOrder(list);
+            CheckOrder(clsTemps);
 
             //重新分配order id
-            ReAllocateOrder(list);
+            ReAllocateOrder(clsTemps);
 
             //清除并创建目录
             output.CreateDirectory();
+
+
+
+            //MsgFactory
+            Template msgTemp = Template.Parse(File.ReadAllText("Geek/MsgFactory.liquid"));
+            var msgstr = msgTemp.Render(msgFactory);
+
+            if (!output.Equals("no"))
+                File.WriteAllText($"{output}/MsgFactory.cs", msgstr);
+            if (!clientOutput.Equals("no"))
+                File.WriteAllText($"{clientOutput}/MsgFactory.cs", msgstr);
+
 
             //生成多态注册器
             Template registerTemp = Template.Parse(File.ReadAllText("Geek/Register.liquid"));
@@ -154,7 +171,7 @@ namespace MessagePackCompiler
                 File.WriteAllText($"{clientOutput}/PolymorphicRegisterGen.cs", rstr);
 
             Template template = Template.Parse(File.ReadAllText("Geek/Proto.liquid"));
-            foreach (var cls in list)
+            foreach (var cls in clsTemps)
             {
                 var str = template.Render(cls);
                 if (!output.Equals("no"))

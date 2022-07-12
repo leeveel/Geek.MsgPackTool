@@ -71,7 +71,7 @@ namespace MessagePackCompiler
                 var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect();
 
                 //生成协议代码
-                GeekGenerator.Singleton.GenCode(compilation, collector.TargetTypes, serverOutput, output, autoNew);
+                new GeekGenerator().GenCode(compilation, collector.TargetTypes, serverOutput, output, autoNew);
 
                 logger("Method Collect Complete:" + sw.Elapsed.ToString());
 

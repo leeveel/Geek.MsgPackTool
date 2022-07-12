@@ -77,4 +77,17 @@ namespace MessagePackCompiler
         public List<PolymorphicInfo> infos = new List<PolymorphicInfo>();
     }
 
+
+    public class MsgInfo
+    {
+        public string typename { get; set; }
+        public int sid { get; set; }
+    }
+
+    public class MsgFactory
+    {
+        public List<MsgInfo> msgs = new List<MsgInfo>();
+        public int count { get { return msgs.Count; } }
+    }
+
 }
