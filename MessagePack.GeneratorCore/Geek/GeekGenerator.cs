@@ -26,7 +26,7 @@ namespace MessagePackCompiler
         private readonly MsgFactory msgFactory = new MsgFactory();
         private readonly List<ClassTemplate> clsTemps = new List<ClassTemplate>();
 
-        public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output, string clientOutput, bool autoNew)
+        public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output, string clientOutput)
         {
             GetAllClassSyntax(compilation);
 
@@ -41,7 +41,6 @@ namespace MessagePackCompiler
                 ClassTemplate clsTemp = new ClassTemplate();
                 clsTemp.name = type.Name;
                 clsTemp.fullname = type.ToString();
-                clsTemp.autonew = autoNew;
 
                 //class syntax
                 ClassDeclarationSyntax clsSyntas = clsSyntaxDic[clsTemp.fullname];
@@ -146,10 +145,10 @@ namespace MessagePackCompiler
             }
 
             //检查key是否合法
-            CheckOrder(clsTemps);
+            //CheckOrder(clsTemps);
 
             //重新分配order id
-            ReAllocateOrder(clsTemps);
+            //ReAllocateOrder(clsTemps);
 
             //清除并创建目录
             output.CreateDirectory();
@@ -188,6 +187,8 @@ namespace MessagePackCompiler
             }
         }
 
+
+        #region obsolete
         /// <summary>
         /// 1.检查key id 是否连贯，重复
         /// </summary>
@@ -273,7 +274,7 @@ namespace MessagePackCompiler
             }
             return order;
         }
-
+        #endregion
 
         public void GetAllClassSyntax(Compilation compilation)
         {

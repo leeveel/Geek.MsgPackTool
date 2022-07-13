@@ -20,9 +20,9 @@ namespace Geek.MsgPackTool
         public static string ClientOutPath { private set; get; }
 
         /// <summary>
-        /// 对于容器类型在生成代码时，是否直接new好
+        /// 服务器是否使用代码生成的Resovler
         /// </summary>
-        public static bool AutoNew { private set; get; }
+        public static bool GeneratedFirst { private set; get; }
 
         public static bool Init()
         {
@@ -45,8 +45,8 @@ namespace Geek.MsgPackTool
                         case "client-out-path":
                             ClientOutPath = node.InnerText;
                             break;
-                        case "auto-new":
-                            AutoNew = bool.Parse(node.InnerText);
+                        case "gen-first":
+                            GeneratedFirst = bool.Parse(node.InnerText);
                             break;
                     }
                 }

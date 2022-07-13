@@ -45,7 +45,7 @@ namespace MessagePackCompiler
            Compilation compilation,
            string output,
            string serverOutput,
-           bool autoNew,
+           bool genFirst,
            string resolverName,
            string? @namespace,
            bool useMapMode,
@@ -71,7 +71,7 @@ namespace MessagePackCompiler
                 var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect();
 
                 //生成协议代码
-                new GeekGenerator().GenCode(compilation, collector.TargetTypes, serverOutput, output, autoNew);
+                new GeekGenerator().GenCode(compilation, collector.TargetTypes, serverOutput, output);
 
                 logger("Method Collect Complete:" + sw.Elapsed.ToString());
 
@@ -102,6 +102,31 @@ namespace MessagePackCompiler
                         await GenerateMultipleFileAsync(output, resolverName, objectInfo, enumInfo, unionInfo, namespaceDot, multiOutputSymbol, genericInfo);
                     }
                 }
+
+                if (!serverOutput.Equals("no") && genFirst)
+                {
+                    if (Path.GetExtension(serverOutput) == ".cs")
+                    {
+                        // SingleFile Output
+                        var fullGeneratedProgramText = GenerateSingleFileSync(resolverName, namespaceDot, objectInfo, enumInfo, unionInfo, genericInfo);
+                        if (multiOutputSymbol == string.Empty)
+                        {
+                            await OutputAsync(serverOutput, fullGeneratedProgramText);
+                        }
+                        else
+                        {
+                            var fname = Path.GetFileNameWithoutExtension(serverOutput) + "." + MultiSymbolToSafeFilePath(multiOutputSymbol) + ".cs";
+                            var text = $"#if {multiOutputSymbol}" + Environment.NewLine + fullGeneratedProgramText + Environment.NewLine + "#endif";
+                            await OutputAsync(Path.Combine(Path.GetDirectoryName(serverOutput) ?? string.Empty, fname), text);
+                        }
+                    }
+                    else
+                    {
+                        // Multiple File output
+                        await GenerateMultipleFileAsync(serverOutput, resolverName, objectInfo, enumInfo, unionInfo, namespaceDot, multiOutputSymbol, genericInfo);
+                    }
+                }
+
 
                 if (objectInfo.Length == 0 && enumInfo.Length == 0 && genericInfo.Length == 0 && unionInfo.Length == 0)
                 {

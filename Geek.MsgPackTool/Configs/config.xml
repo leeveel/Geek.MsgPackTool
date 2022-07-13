@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config>
-  <project-path>..\Geek.Proto</project-path> <!-- proto project path-->
-  <server-out-path>..\Output</server-out-path> <!-- 服务器代码导出路径 -->
-  <client-out-path>..\Output</client-out-path><!-- 客户端代码导出路径-->
+  <!-- proto project path-->
+  <project-path>..\Geek.Proto</project-path>
+  <!-- 服务器代码导出路径 -->  
+  <server-out-path>..\Output</server-out-path>
+  <!-- 客户端代码导出路径-->  
+  <client-out-path>..\Output</client-out-path>
+  <!-- 服务器是否使用代码生成的Resovler -->
+  <gen-first>false</gen-first>
 </config>

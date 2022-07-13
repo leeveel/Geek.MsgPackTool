@@ -12,7 +12,7 @@ namespace Geek.MsgPackTool
         public string Namespace;
         public bool UseMapMode;
         public string MultipleIfDirectiveOutputSymbols;
-        public bool AutoNew;
+        public bool GeneratedFirst;
 
         public static MpcArgument Restore()
         {
@@ -25,7 +25,7 @@ namespace Geek.MsgPackTool
             sb.Append("-i "); sb.Append(Input);
             sb.Append(" -o "); sb.Append(Output);
             sb.Append(" -so "); sb.Append(ServerOutput);
-            sb.Append(" -an "); sb.Append(AutoNew);
+            sb.Append(" -gf "); sb.Append(GeneratedFirst);
             if (!string.IsNullOrWhiteSpace(ConditionalSymbol))
             {
                 sb.Append(" -c "); sb.Append(ConditionalSymbol);

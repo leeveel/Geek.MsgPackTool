@@ -231,6 +231,21 @@ namespace MessagePack
         void OnAfterDeserialize();
     }
 }
+
+using MessagePack;
+
+namespace Geek.Server
+{
+    [MessagePackObject]
+    public class BaseMessage
+    {
+        [MessagePack.KeyAttribute(0)]
+        public int UniId { get; set; }
+        [MessagePack.IgnoreMemberAttribute]
+        public virtual int MsgId { get; }
+    }
+}
+
 ";
     }
 }

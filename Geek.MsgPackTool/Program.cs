@@ -54,7 +54,7 @@ namespace Geek.MsgPackTool
             //mpcArgument.Input = @"F:\github\leeveel\GeekServerMPC\GeekServer.Proto";
             //mpcArgument.Output = @"F:\github\leeveel\GeekServerMPC\GeekServer.Generate\Proto";
             mpcArgument.Input = Setting.ProjectPath;
-            mpcArgument.AutoNew = Setting.AutoNew; 
+            mpcArgument.GeneratedFirst = Setting.GeneratedFirst; 
             if (model == 1)
             {
                 mpcArgument.ServerOutput = Setting.ServerOutPath;

@@ -28,6 +28,16 @@ namespace MessagePackCompiler
             }
         }
 
+        public string sidcode
+        {
+            get
+            {
+                if(!string.IsNullOrEmpty(super) && !super.Equals(GeekGenerator.BaseMessage))
+                    return $"public new const int Sid = {sid}";
+                else
+                    return $"public const int Sid = {sid}";
+            }
+        }
 
         public int sid { get; set; }
 
@@ -39,8 +49,6 @@ namespace MessagePackCompiler
         /// 添加了Key注解的字段
         /// </summary>
         public int sfieldcount = 0;
-
-        public bool autonew { get; set; }
 
         public List<string> usings = new List<string>();
     }
