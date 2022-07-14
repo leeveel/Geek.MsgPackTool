@@ -8,6 +8,7 @@ namespace MessagePackCompiler
     /// </summary>
     public class ClassTemplate
     {
+        public string typename { get; set; }
         public string fullname { get; set; }
         public string name { get; set; }
         public bool ismsg { get; set; }
@@ -59,24 +60,9 @@ namespace MessagePackCompiler
 
         public string name { get; set; }
 
-        public int order { get; set; } = -1;
-
         public bool ignore { get; set; }
 
-        public List<string> attributes = new List<string>();
-
-        public Dictionary<int, string> orderdic = new Dictionary<int, string>();
-
-        public string propcode
-        {
-            get 
-            {
-                if (ignore)
-                    return ignorepropcode;
-                return orderdic[order]; 
-            }
-        }
-        public string ignorepropcode { get; set; }
+        public string propcode { get; set; }
     }
 
     public class PolymorphicInfo

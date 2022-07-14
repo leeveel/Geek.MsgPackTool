@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace MessagePackCompiler
 {
@@ -14,12 +13,12 @@ namespace MessagePackCompiler
     {
 
         public const string KeyAttribute = "MessagePack.KeyAttribute";
+        public const string IgnoreAttribute = "MessagePack.IgnoreMemberAttribute";
         public const string SerializeAttribute = "Geek.Server.Proto.SerializeAttribute";
         public const string BaseMessage = "Geek.Server.Message";
 
         public static GeekGenerator Singleton = new GeekGenerator();
         //sub - parent
-        private readonly Dictionary<string, ClassTemplate> clsDid = new Dictionary<string, ClassTemplate>();
         private readonly Dictionary<int, string> sidDic = new Dictionary<int, string>();
         private readonly Dictionary<string, ClassDeclarationSyntax> clsSyntaxDic = new Dictionary<string, ClassDeclarationSyntax>();
         private readonly PolymorphicInfoFactory polymorphicInfos = new PolymorphicInfoFactory();
@@ -30,17 +29,20 @@ namespace MessagePackCompiler
         {
             GetAllClassSyntax(compilation);
 
-            ClassTemplate baseMsg = new ClassTemplate();
-            baseMsg.fullname = BaseMessage;
-            clsDid.Add(BaseMessage, baseMsg);
-
             foreach (var type in targetTypes)
             {
-                var member = type.GetMembers("BarType").FirstOrDefault();
-
                 ClassTemplate clsTemp = new ClassTemplate();
                 clsTemp.name = type.Name;
                 clsTemp.fullname = type.ToString();
+
+                if (type.TypeKind == TypeKind.Enum)
+                    clsTemp.typename = "enum";
+                else if (type.TypeKind == TypeKind.Class)
+                    clsTemp.typename = "class";
+                else if (type.TypeKind == TypeKind.Struct)
+                    clsTemp.typename = "struct";
+                else
+                    throw new Exception($"unknown type:{type.Name}.{type.TypeKind}");
 
                 //class syntax
                 ClassDeclarationSyntax clsSyntas = clsSyntaxDic[clsTemp.fullname];
@@ -49,30 +51,41 @@ namespace MessagePackCompiler
                 {
                     clsTemp.usings.Add(element.Name.ToString());
                 }
-
+                
                 var atts = type.GetAttributes();
+                bool hasSerialize = false;
                 foreach (var att in atts)
                 {
                     if (att.ToString().Contains(SerializeAttribute))
                     {
-                        clsTemp.sid = (int)att.ConstructorArguments[0].Value;
-                        //clsTemp.ismsg = (bool)att.ConstructorArguments[1].Value;
+                        hasSerialize = true;
+                        if (att.ConstructorArguments != null && att.ConstructorArguments.Length > 0)
+                        {
+                            var obj = att.ConstructorArguments[0].Value;
+                            clsTemp.sid = obj == null ? 0 : (int)obj;
+                        }
                     }
+                }
+
+                //非枚举必须包含SerializeAttribute
+                if (!hasSerialize && clsTemp.typename != "enum")
+                {
+                    throw new Exception($"non enum type must has {SerializeAttribute} :{type.Name}.{type.TypeKind}");
+                }
+                //枚举不能添加SerializeAttribute
+                else if (hasSerialize && clsTemp.typename == "enum")
+                {
+                    throw new Exception($"enum type cannot add {SerializeAttribute} :{type.Name}.{type.TypeKind}");
                 }
 
                 //检查sid是否重复
                 if (!sidDic.ContainsKey(clsTemp.sid))
-                {
                     sidDic.Add(clsTemp.sid, clsTemp.fullname);
-                }
                 else
-                {
                     throw new Exception($"sid exists duplicate key: {clsTemp.fullname}---{sidDic[clsTemp.sid]}");
-                }
 
                 //处理多态关系
-                //TODO：检查父类也必须标记了[MessagePackObject]
-                if (!type.BaseType.ToString().Equals("object"))
+                if (type.BaseType != null && !type.BaseType.ToString().Equals("object"))
                 {
                     clsTemp.super = type.BaseType.ToString();
                     PolymorphicInfo info = new PolymorphicInfo();
@@ -95,50 +108,16 @@ namespace MessagePackCompiler
                     FieldTemplate ftemp = new FieldTemplate();
                     ftemp.name = m.Name;
                     ftemp.clsname = m.Type.ToString();
-                    //ftemp.clsname = m.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
-
-                    var matts = m.GetAttributes();
-                    foreach (var att in matts)
-                    {
-                        if (att.ToString().Contains(KeyAttribute))
-                        {
-                            ftemp.order = (int)att.ConstructorArguments[0].Value;
-                            clsTemp.sfieldcount++;
-                            if (ftemp.orderdic.ContainsKey(ftemp.order))
-                            {
-                                throw new Exception($"sid exists duplicate key {ftemp.order} : {clsTemp.fullname}");
-                            }
-                            else
-                            {
-                                ftemp.orderdic.Add(ftemp.order, GetPropertyCode(ftemp.name, clsSyntaxDic[clsTemp.fullname]));
-                            }
-                        }
-                        else
-                        {
-                            ftemp.ignore = true;
-                            ftemp.ignorepropcode = GetPropertyCode(ftemp.name, clsSyntaxDic[clsTemp.fullname]);
-                        }
-                    }
+                    ftemp.propcode = GetPropertyCode(ftemp.name, clsSyntas);
                     clsTemp.fields.Add(ftemp);
                 }
-
-                //以order为标准对字段进行重排序
-                clsTemp.fields.OrderBy(f => f.order);
-
                 clsTemps.Add(clsTemp);
-                clsDid.Add(clsTemp.fullname, clsTemp);
 
                 MsgInfo msg = new MsgInfo();
                 msg.sid = clsTemp.sid;
                 msg.typename = clsTemp.fullname;
                 msgFactory.msgs.Add(msg);
             }
-
-            //检查key是否合法
-            //CheckOrder(clsTemps);
-
-            //重新分配order id
-            //ReAllocateOrder(clsTemps);
 
             //清除并创建目录
             output.CreateDirectory();
@@ -178,94 +157,6 @@ namespace MessagePackCompiler
         }
 
 
-        #region obsolete
-        /// <summary>
-        /// 1.检查key id 是否连贯，重复
-        /// </summary>
-        /// <returns></returns>
-        public void CheckOrder(List<ClassTemplate> list)
-        {
-            foreach (var cls in list)
-            {
-                int temp = 0;
-                bool first = true;
-                for (int i = 0; i < cls.fields.Count; i++)
-                {
-                    if (cls.fields[i].ignore)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        if (first)
-                        {
-                            first = false;
-                            temp = cls.fields[i].order;
-                            if (temp != 0)
-                                throw new Exception($"key must start from zero : {cls.fullname}");
-                        }
-                        else if (++temp != cls.fields[i].order)
-                        {
-                            foreach (var f in cls.fields)
-                            {
-                                Console.WriteLine(f.order);
-                            }
-                            throw new Exception($"keys must be sequenece : {cls.fullname}");
-                        }
-                    }
-                }
-            }
-        }
-
-
-        public void ReAllocateOrder(List<ClassTemplate> list)
-        {
-            foreach (var cls in list)
-            {
-                ReAllocateOrder(cls);
-            }
-        }
-
-        public void ReAllocateOrder(ClassTemplate cls)
-        {
-            int order = GetStartOrder(cls);
-            foreach (var field in cls.fields)
-            {
-                if (field.ignore)
-                    continue;
-                //field.attributes.Add($"Key({order++})");
-                //var after = field.orderdic[field.order].Replace($"Key({field.order})", $"Key({order++})");
-                //field.orderdic[field.order] = after;
-                var before = field.orderdic[field.order];
-                string extract = Regex.Match(before, string.Format("{0}.+{1}", "Key", "\\)")).Value;
-                field.orderdic[field.order] = before.Replace(extract, $"Key({order++})");
-            }
-        }
-
-
-        public int GetStartOrder(ClassTemplate cls)
-        {
-            if (cls.fullname == BaseMessage)
-                return 1;
-            if (string.IsNullOrEmpty(cls.super)) //userinfo, etc...
-                return 0;
-
-            int order = 0;
-            if (!string.IsNullOrEmpty(cls.super))
-            {
-                clsDid.TryGetValue(cls.super, out ClassTemplate parent);
-                if (parent == null)
-                    throw new Exception($"can not find base class:{cls.super}");
-                order += GetStartOrder(parent);
-            }
-            else
-            {
-                order += cls.sfieldcount;
-            }
-            return order;
-        }
-        #endregion
-
         public void GetAllClassSyntax(Compilation compilation)
         {
             foreach (var tree in compilation.SyntaxTrees)
@@ -277,7 +168,6 @@ namespace MessagePackCompiler
                 }
             }
         }
-
 
         public string GetPropertyCode(string name, ClassDeclarationSyntax clsSyntax)
         {
