@@ -15,7 +15,7 @@ namespace MessagePackCompiler
 
         public const string KeyAttribute = "MessagePack.KeyAttribute";
         public const string SerializeAttribute = "Geek.Server.Proto.SerializeAttribute";
-        public const string BaseMessage = "Geek.Server.BaseMessage";
+        public const string BaseMessage = "Geek.Server.Message";
 
         public static GeekGenerator Singleton = new GeekGenerator();
         //sub - parent
@@ -56,7 +56,7 @@ namespace MessagePackCompiler
                     if (att.ToString().Contains(SerializeAttribute))
                     {
                         clsTemp.sid = (int)att.ConstructorArguments[0].Value;
-                        clsTemp.ismsg = (bool)att.ConstructorArguments[1].Value;
+                        //clsTemp.ismsg = (bool)att.ConstructorArguments[1].Value;
                     }
                 }
 
@@ -70,22 +70,9 @@ namespace MessagePackCompiler
                     throw new Exception($"sid exists duplicate key: {clsTemp.fullname}---{sidDic[clsTemp.sid]}");
                 }
 
-
                 //处理多态关系
                 //TODO：检查父类也必须标记了[MessagePackObject]
-                if (type.BaseType.ToString().Equals("object"))
-                {
-                    if (clsTemp.ismsg)
-                    {
-                        PolymorphicInfo info = new PolymorphicInfo();
-                        info.basename = BaseMessage;
-                        info.subname = clsTemp.fullname;
-                        info.subsid = clsTemp.sid;
-                        clsTemp.super = BaseMessage;
-                        polymorphicInfos.infos.Add(info);
-                    }
-                }
-                else
+                if (!type.BaseType.ToString().Equals("object"))
                 {
                     clsTemp.super = type.BaseType.ToString();
                     PolymorphicInfo info = new PolymorphicInfo();
@@ -94,6 +81,9 @@ namespace MessagePackCompiler
                     info.subsid = clsTemp.sid;
                     polymorphicInfos.infos.Add(info);
                 }
+
+                if(!string.IsNullOrEmpty(clsTemp.super))
+                    clsTemp.ismsg = clsTemp.super.Equals(BaseMessage);
 
                 //命名空间
                 clsTemp.space = type.ContainingNamespace.ToString();

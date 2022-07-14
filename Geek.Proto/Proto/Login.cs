@@ -4,20 +4,7 @@ namespace Geek.Server.Proto
 {
 
 	[MessagePackObject]
-	[Serialize(110000, false)]
-	public class BaseMessage1
-	{
-		/// <summary>
-		/// 消息唯一id
-		/// </summary>
-		[Key(0)]
-		public int UniId { get; set; }
-		[IgnoreMember]
-		public virtual int MsgId { get; }
-	}
-
-	[MessagePackObject]
-    [Serialize(110001, true)]
+    [Serialize(110001)]
 	public class ReqLogin
 	{
 		[Key(0)]
@@ -35,7 +22,7 @@ namespace Geek.Server.Proto
 	}
 
 	[MessagePackObject]
-	[Serialize(110002, false)]
+	[Serialize(110002)]
 	public class UserInfo
 	{
         [Key(0)]

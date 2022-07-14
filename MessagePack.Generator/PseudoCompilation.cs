@@ -237,7 +237,7 @@ using MessagePack;
 namespace Geek.Server
 {
     [MessagePackObject]
-    public class BaseMessage
+    public class Message
     {
         [MessagePack.KeyAttribute(0)]
         public int UniId { get; set; }
