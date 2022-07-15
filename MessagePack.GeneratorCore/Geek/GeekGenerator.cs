@@ -20,13 +20,15 @@ namespace MessagePackCompiler
         public static GeekGenerator Singleton = new GeekGenerator();
         //sub - parent
         private readonly Dictionary<int, string> sidDic = new Dictionary<int, string>();
-        private readonly Dictionary<string, ClassDeclarationSyntax> clsSyntaxDic = new Dictionary<string, ClassDeclarationSyntax>();
+        private readonly Dictionary<string, BaseTypeDeclarationSyntax> clsSyntaxDic = new Dictionary<string, BaseTypeDeclarationSyntax>();
         private readonly PolymorphicInfoFactory polymorphicInfos = new PolymorphicInfoFactory();
         private readonly MsgFactory msgFactory = new MsgFactory();
         private readonly List<ClassTemplate> clsTemps = new List<ClassTemplate>();
+        private readonly List<GeekEnumTemplate> enumTemps = new List<GeekEnumTemplate>();
 
         public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output, string clientOutput)
         {
+            GetAllEnumSyntax(compilation);
             GetAllClassSyntax(compilation);
 
             foreach (var type in targetTypes)
@@ -45,7 +47,7 @@ namespace MessagePackCompiler
                     throw new Exception($"unknown type:{type.Name}.{type.TypeKind}");
 
                 //class syntax
-                ClassDeclarationSyntax clsSyntas = clsSyntaxDic[clsTemp.fullname];
+                BaseTypeDeclarationSyntax clsSyntas = clsSyntaxDic[clsTemp.fullname];
                 CompilationUnitSyntax root = clsSyntas.SyntaxTree.GetCompilationUnitRoot();
                 foreach (UsingDirectiveSyntax element in root.Usings)
                 {
@@ -84,15 +86,28 @@ namespace MessagePackCompiler
                 else
                     throw new Exception($"sid exists duplicate key: {clsTemp.fullname}---{sidDic[clsTemp.sid]}");
 
-                //处理多态关系
-                if (type.BaseType != null && !type.BaseType.ToString().Equals("object"))
+                if (type.TypeKind == TypeKind.Class && type.BaseType != null)
                 {
-                    clsTemp.super = type.BaseType.ToString();
-                    PolymorphicInfo info = new PolymorphicInfo();
-                    info.basename = clsTemp.super;
-                    info.subname = clsTemp.fullname;
-                    info.subsid = clsTemp.sid;
-                    polymorphicInfos.infos.Add(info);
+                    if (!type.BaseType.ToString().Equals("object"))
+                    {
+                        //注册子类多态信息
+                        clsTemp.super = type.BaseType.ToString();
+                        //Console.WriteLine(clsTemp.super);
+                        PolymorphicInfo info = new PolymorphicInfo();
+                        info.basename = clsTemp.super;
+                        info.subname = clsTemp.fullname;
+                        info.subsid = clsTemp.sid;
+                        polymorphicInfos.infos.Add(info);
+                    }
+                    else
+                    {
+                        //注册基类多态信息
+                        PolymorphicInfo info = new PolymorphicInfo();
+                        info.basename = clsTemp.fullname;
+                        info.subname = clsTemp.fullname;
+                        info.subsid = clsTemp.sid;
+                        polymorphicInfos.infos.Add(info);
+                    }
                 }
 
                 if(!string.IsNullOrEmpty(clsTemp.super))
@@ -145,14 +160,24 @@ namespace MessagePackCompiler
             if (!clientOutput.Equals("no"))
                 File.WriteAllText($"{clientOutput}/PolymorphicRegisterGen.cs", rstr);
 
+            Template enumTemp = Template.Parse(File.ReadAllText("Geek/Enum.liquid"));
+            foreach (var e in enumTemps)
+            {
+                var str = enumTemp.Render(e);
+                if (!output.Equals("no"))
+                    File.WriteAllText($"{output}/{e.fullname}.cs", str);
+                if (!clientOutput.Equals("no"))
+                    File.WriteAllText($"{clientOutput}/{e.fullname}.cs", str);
+            }
+
             Template template = Template.Parse(File.ReadAllText("Geek/Proto.liquid"));
             foreach (var cls in clsTemps)
             {
                 var str = template.Render(cls);
                 if (!output.Equals("no"))
-                    File.WriteAllText($"{output}/{cls.name}.cs", str);
+                    File.WriteAllText($"{output}/{cls.fullname}.cs", str);
                 if (!clientOutput.Equals("no"))
-                    File.WriteAllText($"{clientOutput}/{cls.name}.cs", str);
+                    File.WriteAllText($"{clientOutput}/{cls.fullname}.cs", str);
             }
         }
 
@@ -161,7 +186,7 @@ namespace MessagePackCompiler
         {
             foreach (var tree in compilation.SyntaxTrees)
             {
-                var classes = tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>();
+                var classes = tree.GetRoot().DescendantNodes().OfType<BaseTypeDeclarationSyntax>();
                 foreach (var cls in classes)
                 {
                     clsSyntaxDic.Add(cls.GetFullName(), cls);
@@ -169,7 +194,24 @@ namespace MessagePackCompiler
             }
         }
 
-        public string GetPropertyCode(string name, ClassDeclarationSyntax clsSyntax)
+        public void GetAllEnumSyntax(Compilation compilation)
+        {
+            foreach (var tree in compilation.SyntaxTrees)
+            {
+                var enums = tree.GetRoot().DescendantNodes().OfType<EnumDeclarationSyntax>();
+                foreach (var e in enums)
+                {
+                    GeekEnumTemplate template = new GeekEnumTemplate();
+                    template.enumcode = e.ToFullString();
+                    template.space = e.GetNameSpace();
+                    template.fullname = e.GetFullName();
+                    //Console.WriteLine(e.ToFullString() + "_" + template.space);
+                    enumTemps.Add(template);
+                }
+            }
+        }
+
+        public string GetPropertyCode(string name, BaseTypeDeclarationSyntax clsSyntax)
         {
             var props = clsSyntax.ChildNodes().OfType<PropertyDeclarationSyntax>();
             foreach (var prop in props)

@@ -65,6 +65,14 @@ namespace MessagePackCompiler
         public string propcode { get; set; }
     }
 
+
+    public class GeekEnumTemplate
+    {
+        public string fullname { get; set; }
+        public string space { get; set; }
+        public string enumcode { get; set; }
+    }
+
     public class PolymorphicInfo
     {
         public string basename { get; set; }

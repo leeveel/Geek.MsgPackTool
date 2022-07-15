@@ -68,18 +68,35 @@ namespace MessagePackCompiler
             }
         }
 
-        public static string GetFullName(this ClassDeclarationSyntax clsSyntas)
+        //public static string GetFullName(this ClassDeclarationSyntax clsSyntas)
+        //{
+        //    NamespaceDeclarationSyntax namespaceDeclarationSyntax = null;
+        //    if (!TryGetParentSyntax(clsSyntas, out namespaceDeclarationSyntax))
+        //    {
+        //        return null; // or whatever you want to do in this scenario
+        //    }
+        //    var namespaceName = namespaceDeclarationSyntax.Name.ToString();
+        //    var fullClassName = namespaceName + "." + clsSyntas.Identifier.ToString();
+        //    return fullClassName;
+        //}
+
+        public static string GetFullName(this BaseTypeDeclarationSyntax syntax)
         {
-            NamespaceDeclarationSyntax namespaceDeclarationSyntax = null;
-            if (!TryGetParentSyntax(clsSyntas, out namespaceDeclarationSyntax))
+            if (TryGetParentSyntax(syntax, out NamespaceDeclarationSyntax namespaceDeclarationSyntax))
             {
-                return null; // or whatever you want to do in this scenario
+                var namespaceName = namespaceDeclarationSyntax.Name.ToString();
+                var fullClassName = namespaceName + "." + syntax.Identifier.ToString();
+                return fullClassName;
             }
-            var namespaceName = namespaceDeclarationSyntax.Name.ToString();
-            var fullClassName = namespaceName + "." + clsSyntas.Identifier.ToString();
-            return fullClassName;
+            return null;
         }
 
+        public static string GetNameSpace(this BaseTypeDeclarationSyntax syntax)
+        {
+            if (TryGetParentSyntax(syntax, out NamespaceDeclarationSyntax namespaceDeclarationSyntax))
+                return namespaceDeclarationSyntax.Name.ToString();
+            return null;
+        }
 
     }
 }
