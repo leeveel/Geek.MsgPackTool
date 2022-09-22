@@ -5,7 +5,7 @@ namespace Geek.MsgPackTool
     public class MpcArgument
     {
         public string Input;
-        public string Output;
+        public string ClientOutput;
         public string ServerOutput;
         public string ConditionalSymbol;
         public string ResolverName;
@@ -23,7 +23,7 @@ namespace Geek.MsgPackTool
         {
             var sb = new StringBuilder();
             sb.Append("-i "); sb.Append(Input);
-            sb.Append(" -o "); sb.Append(Output);
+            sb.Append(" -o "); sb.Append(ClientOutput);
             sb.Append(" -so "); sb.Append(ServerOutput);
             sb.Append(" -gf "); sb.Append(GeneratedFirst);
             if (!string.IsNullOrWhiteSpace(ConditionalSymbol))

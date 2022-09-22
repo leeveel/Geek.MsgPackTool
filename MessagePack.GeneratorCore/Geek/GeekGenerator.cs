@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
+using Standart.Hash.xxHash;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,31 +54,13 @@ namespace MessagePackCompiler
                 {
                     clsTemp.usings.Add(element.Name.ToString());
                 }
-                
-                var atts = type.GetAttributes();
-                bool hasSerialize = false;
-                foreach (var att in atts)
-                {
-                    if (att.ToString().Contains(SerializeAttribute))
-                    {
-                        hasSerialize = true;
-                        if (att.ConstructorArguments != null && att.ConstructorArguments.Length > 0)
-                        {
-                            var obj = att.ConstructorArguments[0].Value;
-                            clsTemp.sid = obj == null ? 0 : (int)obj;
-                        }
-                    }
-                }
 
-                //非枚举必须包含SerializeAttribute
-                if (!hasSerialize && clsTemp.typename != "enum")
+                //通过类型名字计算唯一hash
+                if (clsTemp.typename != "enum")
                 {
-                    throw new Exception($"non enum type must has {SerializeAttribute} :{type.Name}.{type.TypeKind}");
-                }
-                //枚举不能添加SerializeAttribute
-                else if (hasSerialize && clsTemp.typename == "enum")
-                {
-                    throw new Exception($"enum type cannot add {SerializeAttribute} :{type.Name}.{type.TypeKind}");
+                    //clsTemp.sid = (int)MurmurHash3.Hash32(, 666);
+                    var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname);
+                    clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, 27);
                 }
 
                 //检查sid是否重复
@@ -110,7 +93,7 @@ namespace MessagePackCompiler
                     }
                 }
 
-                if(!string.IsNullOrEmpty(clsTemp.super))
+                if (!string.IsNullOrEmpty(clsTemp.super))
                     clsTemp.ismsg = clsTemp.super.Equals(BaseMessage);
 
                 //命名空间

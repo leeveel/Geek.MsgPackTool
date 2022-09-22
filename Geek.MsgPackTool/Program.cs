@@ -53,22 +53,22 @@ namespace Geek.MsgPackTool
             //mpcArgument.Input = @"D:\workspace\common\Tools\MsgPackTool\Geek.Proto";
             //mpcArgument.Input = @"F:\github\leeveel\GeekServerMPC\GeekServer.Proto";
             //mpcArgument.Output = @"F:\github\leeveel\GeekServerMPC\GeekServer.Generate\Proto";
-            mpcArgument.Input = Setting.ProjectPath;
-            mpcArgument.GeneratedFirst = Setting.GeneratedFirst; 
+            mpcArgument.Input = Setting.Ins.ProjectPath;
+            mpcArgument.GeneratedFirst = Setting.Ins.GeneratedFirst;
             if (model == 1)
             {
-                mpcArgument.ServerOutput = Setting.ServerOutPath;
-                mpcArgument.Output = "no";
+                mpcArgument.ServerOutput = Setting.Ins.ServerOutPath;
+                mpcArgument.ClientOutput = "no";
             }
             else if (model == 2)
             {
                 mpcArgument.ServerOutput = "no";
-                mpcArgument.Output = Setting.ClientOutPath;
+                mpcArgument.ClientOutput = Setting.Ins.ClientOutPath;
             }
             else if (model == 3)
             {
-                mpcArgument.ServerOutput = Setting.ServerOutPath;
-                mpcArgument.Output = Setting.ClientOutPath;
+                mpcArgument.ServerOutput = Setting.Ins.ServerOutPath;
+                mpcArgument.ClientOutput = Setting.Ins.ClientOutPath;
             }
             else
             {
