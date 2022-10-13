@@ -60,7 +60,7 @@ namespace MessagePackCompiler
                 {
                     //clsTemp.sid = (int)MurmurHash3.Hash32(, 666);
                     var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname);
-                    clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, 27);
+                    clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes,0, nameBytes.Length, 27);
                 }
 
                 //检查sid是否重复
