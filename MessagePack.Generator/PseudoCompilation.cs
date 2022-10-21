@@ -232,20 +232,6 @@ namespace MessagePack
     }
 }
 
-using MessagePack;
-
-namespace Geek.Server
-{
-    [MessagePackObject]
-    public class Message
-    {
-        [MessagePack.KeyAttribute(0)]
-        public int UniId { get; set; }
-        [MessagePack.IgnoreMemberAttribute]
-        public virtual int MsgId { get; }
-    }
-}
-
 ";
     }
 }

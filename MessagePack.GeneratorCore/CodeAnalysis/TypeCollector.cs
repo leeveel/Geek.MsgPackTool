@@ -54,8 +54,8 @@ namespace MessagePackCompiler.CodeAnalysis
             MessagePackObjectAttribute = compilation.GetTypeByMetadataName("MessagePack.MessagePackObjectAttribute")
                 ?? throw new InvalidOperationException("failed to get metadata of MessagePack.MessagePackObjectAttribute");
 
-            SerializeAttribute = compilation.GetTypeByMetadataName(GeekGenerator.SerializeAttribute)
-              ?? throw new InvalidOperationException($"failed to get metadata of {GeekGenerator.SerializeAttribute}");
+            //SerializeAttribute = compilation.GetTypeByMetadataName(GeekGenerator.SerializeAttribute)
+            //  ?? throw new InvalidOperationException($"failed to get metadata of {GeekGenerator.SerializeAttribute}");
 
             UnionAttribute = compilation.GetTypeByMetadataName("MessagePack.UnionAttribute")
                 ?? throw new InvalidOperationException("failed to get metadata of MessagePack.UnionAttribute");

@@ -16,7 +16,6 @@ namespace MessagePackCompiler
 
         public const string KeyAttribute = "MessagePack.KeyAttribute";
         public const string IgnoreAttribute = "MessagePack.IgnoreMemberAttribute";
-        public const string SerializeAttribute = "Geek.Server.Proto.SerializeAttribute";
         public const string BaseMessage = "Geek.Server.Message";
 
         public static GeekGenerator Singleton = new GeekGenerator();
