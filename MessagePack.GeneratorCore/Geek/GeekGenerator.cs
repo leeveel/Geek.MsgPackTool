@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
+using Scriban.Runtime;
 using Standart.Hash.xxHash;
 using System;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace MessagePackCompiler
 
         public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output, string clientOutput)
         {
+            Console.WriteLine($"-----------GenCode start Count:{targetTypes.Length}------------");
             GetAllEnumSyntax(compilation);
             GetAllClassSyntax(compilation);
 
@@ -60,7 +62,7 @@ namespace MessagePackCompiler
                 {
                     //clsTemp.sid = (int)MurmurHash3.Hash32(, 666);
                     var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname);
-                    clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, 27);
+                    clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, (uint)27);
                 }
 
                 //检查sid是否重复
@@ -69,13 +71,13 @@ namespace MessagePackCompiler
                 else
                     throw new Exception($"sid exists duplicate key: {clsTemp.fullname}---{sidDic[clsTemp.sid]}");
 
+              
                 if (type.TypeKind == TypeKind.Class && type.BaseType != null)
                 {
                     if (!type.BaseType.ToString().Equals("object"))
                     {
                         //注册子类多态信息
                         clsTemp.super = type.BaseType.ToString();
-                        //Console.WriteLine(clsTemp.super);
                         PolymorphicInfo info = new PolymorphicInfo();
                         info.basename = clsTemp.super;
                         info.subname = clsTemp.fullname;
@@ -125,8 +127,13 @@ namespace MessagePackCompiler
                 clientOutput.CreateDirectory();
 
             //MsgFactory
+            var fctx = new TemplateContext();
+            fctx.LoopLimit = 0;
+            var fsobj = new ScriptObject();
+            fsobj.Import(msgFactory);
+            fctx.PushGlobal(fsobj);
             Template msgTemp = Template.Parse(File.ReadAllText("Geek/MsgFactory.liquid"));
-            var msgstr = msgTemp.Render(msgFactory);
+            var msgstr = msgTemp.Render(fctx);
 
             if (!output.Equals("no"))
                 File.WriteAllText($"{output}/MsgFactory.cs", msgstr);
@@ -135,8 +142,13 @@ namespace MessagePackCompiler
 
 
             //生成多态注册器
+            var rctx = new TemplateContext();
+            rctx.LoopLimit = 0;
+            var rsobj = new ScriptObject();
+            rsobj.Import(polymorphicInfos);
+            rctx.PushGlobal(rsobj);
             Template registerTemp = Template.Parse(File.ReadAllText("Geek/Register.liquid"));
-            var rstr = registerTemp.Render(polymorphicInfos);
+            var rstr = registerTemp.Render(rctx);
 
             if (!output.Equals("no"))
                 File.WriteAllText($"{output}/PolymorphicRegisterGen.cs", rstr);
@@ -146,7 +158,12 @@ namespace MessagePackCompiler
             Template enumTemp = Template.Parse(File.ReadAllText("Geek/Enum.liquid"));
             foreach (var e in enumTemps)
             {
-                var str = enumTemp.Render(e);
+                var ectx = new TemplateContext();
+                ectx.LoopLimit = 0;
+                var esobj = new ScriptObject();
+                esobj.Import(e);
+                ectx.PushGlobal(esobj);
+                var str = enumTemp.Render(ectx);
                 if (!output.Equals("no"))
                     File.WriteAllText($"{output}/{e.fullname}.cs", str);
                 if (!clientOutput.Equals("no"))
@@ -156,7 +173,12 @@ namespace MessagePackCompiler
             Template template = Template.Parse(File.ReadAllText("Geek/Proto.liquid"));
             foreach (var cls in clsTemps)
             {
-                var str = template.Render(cls);
+                var ctx = new TemplateContext();
+                ctx.LoopLimit = 0;
+                var sobj = new ScriptObject();
+                sobj.Import(cls);
+                ctx.PushGlobal(sobj);
+                var str = template.Render(ctx);
                 if (!output.Equals("no"))
                     File.WriteAllText($"{output}/{cls.fullname}.cs", str);
                 if (!clientOutput.Equals("no"))
@@ -186,6 +208,7 @@ namespace MessagePackCompiler
                 {
                     GeekEnumTemplate template = new GeekEnumTemplate();
                     template.enumcode = e.ToFullString();
+                    //Console.WriteLine("enumcode:" + template.enumcode);
                     template.space = e.GetNameSpace();
                     template.fullname = e.GetFullName();
                     //Console.WriteLine(e.ToFullString() + "_" + template.space);

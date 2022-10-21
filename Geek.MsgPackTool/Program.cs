@@ -1,6 +1,5 @@
 ﻿using NLog;
 using NLog.Config;
-using System.Text.RegularExpressions;
 
 namespace Geek.MsgPackTool
 {
@@ -91,6 +90,7 @@ namespace Geek.MsgPackTool
             {
                 invokingMpc = false;
             }
+            $"-----------GenCode Successed------------".WriteSuccessLine();
         }
 
     }
