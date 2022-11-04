@@ -23,6 +23,7 @@ namespace MessagePackCompiler
         private readonly Dictionary<int, string> sidDic = new Dictionary<int, string>();
         private readonly Dictionary<string, BaseTypeDeclarationSyntax> clsSyntaxDic = new Dictionary<string, BaseTypeDeclarationSyntax>();
         private readonly PolymorphicInfoFactory polymorphicInfos = new PolymorphicInfoFactory();
+        private readonly List<PolymorphicInfo> finalClassList = new List<PolymorphicInfo>();
         private readonly MsgFactory msgFactory = new MsgFactory();
         private readonly List<ClassTemplate> clsTemps = new List<ClassTemplate>();
         private readonly List<GeekEnumTemplate> enumTemps = new List<GeekEnumTemplate>();
@@ -92,6 +93,7 @@ namespace MessagePackCompiler
                         info.subname = clsTemp.fullname;
                         info.subsid = clsTemp.sid;
                         polymorphicInfos.infos.Add(info);
+                        finalClassList.Add(info);
                     }
                 }
 
@@ -142,6 +144,7 @@ namespace MessagePackCompiler
 
 
             //生成多态注册器
+            RemoveNoSubClass();
             var rctx = new TemplateContext();
             rctx.LoopLimit = 0;
             var rsobj = new ScriptObject();
@@ -183,6 +186,23 @@ namespace MessagePackCompiler
                     File.WriteAllText($"{output}/{cls.fullname}.cs", str);
                 if (!clientOutput.Equals("no"))
                     File.WriteAllText($"{clientOutput}/{cls.fullname}.cs", str);
+            }
+        }
+
+        private void RemoveNoSubClass()
+        {
+            foreach (var pinfo in finalClassList)
+            {
+                bool found = false;
+                foreach (var p in polymorphicInfos.infos)
+                {
+                    if (pinfo != p && p.basename == pinfo.basename)
+                    {
+                        found = true;
+                    }
+                }
+                if (!found)
+                    polymorphicInfos.infos.Remove(pinfo);
             }
         }
 
