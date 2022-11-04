@@ -60,8 +60,9 @@ namespace MessagePackCompiler
                 if (clsTemp.typename != "enum")
                 {
                     //clsTemp.sid = (int)MurmurHash3.Hash32(, 666);
-                    var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname);
-                    clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, (uint)27);
+                    //var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname);
+                    //clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, (uint)27);
+                    clsTemp.sid = (int)MurmurHash3.Hash(clsTemp.fullname, 27);
                 }
 
                 //检查sid是否重复
