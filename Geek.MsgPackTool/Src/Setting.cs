@@ -5,6 +5,9 @@ namespace Geek.MsgPackTool
 {
     public class Setting
     {
+
+        public string BaseMessageName { set; get; }
+
         /// <summary>
         /// Proto 工程路径
         /// </summary>

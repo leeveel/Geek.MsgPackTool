@@ -7,6 +7,7 @@ namespace Geek.MsgPackTool
         public string Input;
         public string ClientOutput;
         public string ServerOutput;
+        public string BaseMessageName;
         public string ConditionalSymbol;
         public string ResolverName;
         public string Namespace;
@@ -25,6 +26,7 @@ namespace Geek.MsgPackTool
             sb.Append("-i "); sb.Append(Input);
             sb.Append(" -o "); sb.Append(ClientOutput);
             sb.Append(" -so "); sb.Append(ServerOutput);
+            sb.Append(" -bmn "); sb.Append(BaseMessageName);
             sb.Append(" -gf "); sb.Append(GeneratedFirst);
             if (!string.IsNullOrWhiteSpace(ConditionalSymbol))
             {

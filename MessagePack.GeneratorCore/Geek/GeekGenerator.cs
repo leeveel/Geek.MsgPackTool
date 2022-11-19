@@ -16,7 +16,7 @@ namespace MessagePackCompiler
 
         public const string KeyAttribute = "MessagePack.KeyAttribute";
         public const string IgnoreAttribute = "MessagePack.IgnoreMemberAttribute";
-        public const string BaseMessage = "Geek.Server.Message";
+        public static string BaseMessage = "Geek.Server.Message";
 
         public static GeekGenerator Singleton = new GeekGenerator();
         //sub - parent
@@ -72,7 +72,7 @@ namespace MessagePackCompiler
                 else
                     throw new Exception($"sid exists duplicate key: {clsTemp.fullname}---{sidDic[clsTemp.sid]}");
 
-              
+
                 if (type.TypeKind == TypeKind.Class && type.BaseType != null)
                 {
                     if (!type.BaseType.ToString().Equals("object"))

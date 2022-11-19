@@ -8,6 +8,7 @@ using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
 using ConsoleAppFramework;
+using MessagePackCompiler;
 using Microsoft.Build.Locator;
 using Microsoft.Build.Logging;
 using Microsoft.CodeAnalysis;
@@ -42,6 +43,7 @@ namespace MessagePack.Generator
             [Option("i", "Input path to MSBuild project file or the directory containing Unity source files.")] string input,
             [Option("o", "Output file path(.cs) or directory (multiple generate file).")] string output,
             [Option("so", "Output file path(.cs) or directory (multiple generate file).")] string serverOutput,
+            [Option("bmn", "Base Message Name")] string baseMessageName,
             [Option("gf", "auto new for containers")] bool genFirst=false,
             [Option("c", "Conditional compiler symbols, split with ','. Ignored if a project file is specified for input.")] string? conditionalSymbol = null,
             [Option("r", "Set resolver name.")] string resolverName = "GeneratedResolver",
@@ -50,6 +52,7 @@ namespace MessagePack.Generator
             [Option("ms", "Generate #if-- files by symbols, split with ','.")] string? multipleIfDirectiveOutputSymbols = null,
             [Option("ei", "Ignore type names.")] string[]? externalIgnoreTypeNames = null)
         {
+            GeekGenerator.BaseMessage = baseMessageName;
             Workspace? workspace = null;
             try
             {
