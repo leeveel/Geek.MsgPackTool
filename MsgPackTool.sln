@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geek.Proto", "Geek.Proto\Geek.Proto.csproj", "{164803AF-38B2-424E-860B-64A79364BB60}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geek.MsgPackTool", "Geek.MsgPackTool\Geek.MsgPackTool.csproj", "{66707F51-C856-4437-8A79-9438DFC5C6A0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Geek.Proto", "Geek.Proto\Geek.Proto.csproj", "{164803AF-38B2-424E-860B-64A79364BB60}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessagePack.GeneratorCore", "MessagePack.GeneratorCore\MessagePack.GeneratorCore.csproj", "{3F3285C6-A8AD-4244-B442-30B0E97752D8}"
 EndProject
@@ -21,10 +19,6 @@ Global
 		{164803AF-38B2-424E-860B-64A79364BB60}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{164803AF-38B2-424E-860B-64A79364BB60}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{164803AF-38B2-424E-860B-64A79364BB60}.Release|Any CPU.Build.0 = Release|Any CPU
-		{66707F51-C856-4437-8A79-9438DFC5C6A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{66707F51-C856-4437-8A79-9438DFC5C6A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{66707F51-C856-4437-8A79-9438DFC5C6A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{66707F51-C856-4437-8A79-9438DFC5C6A0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F3285C6-A8AD-4244-B442-30B0E97752D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3F3285C6-A8AD-4244-B442-30B0E97752D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3F3285C6-A8AD-4244-B442-30B0E97752D8}.Release|Any CPU.ActiveCfg = Release|Any CPU

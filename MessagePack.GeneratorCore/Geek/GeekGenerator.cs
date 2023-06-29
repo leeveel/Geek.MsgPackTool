@@ -36,6 +36,7 @@ namespace MessagePackCompiler
 
             foreach (var type in targetTypes)
             {
+                //Console.Write("处理类型:" + type.ToString());
                 if (NoExportTypes.IndexOf(type.ToString()) >= 0)
                 {
                     continue;

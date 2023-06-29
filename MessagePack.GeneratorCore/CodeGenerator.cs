@@ -135,6 +135,7 @@ namespace MessagePackCompiler
             }
 
             logger("Output Generation Complete:" + sw.Elapsed.ToString());
+            logger("end..........................................................");
         }
 
         /// <summary>
