@@ -44,15 +44,20 @@ namespace MessagePack.Generator
             [Option("o", "Output file path(.cs) or directory (multiple generate file).")] string output,
             [Option("so", "Output file path(.cs) or directory (multiple generate file).")] string serverOutput,
             [Option("bmn", "Base Message Name")] string baseMessageName,
-            [Option("gf", "auto new for containers")] bool genFirst=false,
+            [Option("gf", "auto new for containers")] bool genFirst = false,
             [Option("c", "Conditional compiler symbols, split with ','. Ignored if a project file is specified for input.")] string? conditionalSymbol = null,
             [Option("r", "Set resolver name.")] string resolverName = "GeneratedResolver",
             [Option("n", "Set namespace root name.")] string @namespace = "MessagePack",
             [Option("m", "Force use map mode serialization.")] bool useMapMode = false,
             [Option("ms", "Generate #if-- files by symbols, split with ','.")] string? multipleIfDirectiveOutputSymbols = null,
-            [Option("ei", "Ignore type names.")] string[]? externalIgnoreTypeNames = null)
+            [Option("ei", "Ignore type names.")] string[]? externalIgnoreTypeNames = null,
+            [Option("nets", "no export types.")] string[]? noExportTypes = null)
         {
             GeekGenerator.BaseMessage = baseMessageName;
+            GeekGenerator.NoExportTypes = new List<string>();
+            if (noExportTypes != null)
+                GeekGenerator.NoExportTypes.AddRange(noExportTypes);
+
             Workspace? workspace = null;
             try
             {

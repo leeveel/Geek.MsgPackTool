@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 
 namespace Geek.MsgPackTool
 {
@@ -14,6 +15,7 @@ namespace Geek.MsgPackTool
         public bool UseMapMode;
         public string MultipleIfDirectiveOutputSymbols;
         public bool GeneratedFirst;
+        public List<string> NoExportTypes;
 
         public static MpcArgument Restore()
         {
@@ -28,6 +30,7 @@ namespace Geek.MsgPackTool
             sb.Append(" -so "); sb.Append(ServerOutput);
             sb.Append(" -bmn "); sb.Append(BaseMessageName);
             sb.Append(" -gf "); sb.Append(GeneratedFirst);
+            sb.Append(" -nets "); sb.Append(string.Join(",", NoExportTypes));
             if (!string.IsNullOrWhiteSpace(ConditionalSymbol))
             {
                 sb.Append(" -c "); sb.Append(ConditionalSymbol);

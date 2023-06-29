@@ -55,6 +55,7 @@ namespace Geek.MsgPackTool
             mpcArgument.Input = Setting.Ins.ProjectPath;
             mpcArgument.GeneratedFirst = Setting.Ins.GeneratedFirst;
             mpcArgument.BaseMessageName = Setting.Ins.BaseMessageName;
+            mpcArgument.NoExportTypes = Setting.Ins.NoExportList;
             if (model == 1)
             {
                 mpcArgument.ServerOutput = Setting.Ins.ServerOutPath;

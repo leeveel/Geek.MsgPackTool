@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
 using Scriban.Runtime;
-using Standart.Hash.xxHash;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,6 +16,7 @@ namespace MessagePackCompiler
         public const string KeyAttribute = "MessagePack.KeyAttribute";
         public const string IgnoreAttribute = "MessagePack.IgnoreMemberAttribute";
         public static string BaseMessage = "Geek.Server.Message";
+        public static List<string> NoExportTypes = new List<string>();
 
         public static GeekGenerator Singleton = new GeekGenerator();
         //sub - parent
@@ -36,6 +36,10 @@ namespace MessagePackCompiler
 
             foreach (var type in targetTypes)
             {
+                if (NoExportTypes.IndexOf(type.ToString()) >= 0)
+                {
+                    continue;
+                }
                 ClassTemplate clsTemp = new ClassTemplate();
                 clsTemp.name = type.Name;
                 clsTemp.fullname = type.ToString();
@@ -61,8 +65,7 @@ namespace MessagePackCompiler
                 if (clsTemp.typename != "enum")
                 {
                     //clsTemp.sid = (int)MurmurHash3.Hash32(, 666);
-                    //var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname);
-                    //clsTemp.sid = (int)xxHash32.ComputeHash(nameBytes, nameBytes.Length, (uint)27);
+                    //var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname); 
                     clsTemp.sid = (int)MurmurHash3.Hash(clsTemp.fullname, 27);
                 }
 

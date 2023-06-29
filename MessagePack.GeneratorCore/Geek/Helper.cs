@@ -88,7 +88,7 @@ namespace MessagePackCompiler
                 var fullClassName = namespaceName + "." + syntax.Identifier.ToString();
                 return fullClassName;
             }
-            return null;
+            return syntax.Identifier.ToString();
         }
 
         public static string GetNameSpace(this BaseTypeDeclarationSyntax syntax)

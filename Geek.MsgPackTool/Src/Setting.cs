@@ -28,6 +28,8 @@ namespace Geek.MsgPackTool
         /// </summary>
         public bool GeneratedFirst { set; get; }
 
+        public List<string> NoExportList { set; get; } = new List<string>();
+
         public static Setting Ins { get; private set; }
 
         public static bool Init()
