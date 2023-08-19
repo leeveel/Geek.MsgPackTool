@@ -299,15 +299,16 @@ namespace MessagePackCompiler.CodeAnalysis
         }
 
         // EntryPoint
-        public (ObjectSerializationInfo[] ObjectInfo, EnumSerializationInfo[] EnumInfo, GenericSerializationInfo[] GenericInfo, UnionSerializationInfo[] UnionInfo) Collect()
+        public (ObjectSerializationInfo[] ObjectInfo, EnumSerializationInfo[] EnumInfo, GenericSerializationInfo[] GenericInfo, UnionSerializationInfo[] UnionInfo) Collect(List<string> NoExportTypes)
         {
             this.ResetWorkspace();
 
             foreach (INamedTypeSymbol item in this.targetTypes)
             {
-                this.CollectCore(item);
+                if(NoExportTypes.IndexOf(item.ToString())<0)
+                    this.CollectCore(item);
             }
-
+ 
             return (
                 this.collectedObjectInfo.OrderBy(x => x.FullName).ToArray(),
                 this.collectedEnumInfo.OrderBy(x => x.FullName).ToArray(),

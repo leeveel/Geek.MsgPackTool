@@ -68,7 +68,7 @@ namespace MessagePackCompiler
                 sw.Restart();
                 logger("Method Collect Start");
 
-                var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect();
+                var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect(GeekGenerator.NoExportTypes);
 
                 //生成协议代码
                 new GeekGenerator().GenCode(compilation, collector.TargetTypes, serverOutput, output);
@@ -329,7 +329,7 @@ namespace MessagePackCompiler
             path = path.Replace("global::", string.Empty);
 
             const string prefix = "[Out]";
-            logger(prefix + path);
+            // logger(prefix + path);
 
             var fi = new FileInfo(path);
             if (fi.Directory != null && !fi.Directory.Exists)
