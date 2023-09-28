@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>MessagePackCompiler</RootNamespace>
     <SignAssembly>True</SignAssembly>
     <LangVersion>9</LangVersion>
@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.6.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
     <PackageReference Include="System.CodeDom" Version="7.0.0" />
-    <PackageReference Include="MessagePack" Version="2.5.108" />
-    <PackageReference Include="Scriban" Version="5.7.0" />
+    <PackageReference Include="MessagePack" Version="2.5.124" />
+    <PackageReference Include="Scriban" Version="5.9.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -61,16 +61,28 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Geek\Enum.liquid">
+    <None Update="Liquid\TS\Enum.liquid">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Geek\Register.liquid">
+    <None Update="Liquid\TS\Final.liquid">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Geek\MsgFactory.liquid">
+    <None Update="Liquid\TS\ProtoMapper.liquid">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Geek\Proto.liquid">
+    <None Update="Liquid\TS\Proto.liquid">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Liquid\CS\Enum.liquid">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Liquid\CS\Register.liquid">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Liquid\CS\MsgFactory.liquid">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Liquid\CS\Proto.liquid">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Generator\EnumTemplate.tt">

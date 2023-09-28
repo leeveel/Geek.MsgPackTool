@@ -14,8 +14,9 @@ using MessagePackCompiler.Generator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editing;
+using InnerGenerator = MessagePackCompiler.CodeGenerator.CS.InnerGenerator;
 
-namespace MessagePackCompiler
+namespace MessagePackCompiler.CodeGenerator.CS
 {
     public class CodeGenerator
     {
@@ -55,29 +56,20 @@ namespace MessagePackCompiler
             var namespaceDot = string.IsNullOrWhiteSpace(@namespace) ? string.Empty : @namespace + ".";
             var multipleOutputSymbols = multipleIfDirectiveOutputSymbols?.Split(',') ?? Array.Empty<string>();
 
-            var sw = Stopwatch.StartNew();
-
             foreach (var multiOutputSymbol in multipleOutputSymbols.Length == 0 ? new[] { string.Empty } : multipleOutputSymbols)
             {
-                logger("Project Compilation Start:" + compilation.AssemblyName);
-
+                logger("开始收集类型...");
                 var collector = new TypeCollector(compilation, true, useMapMode, externalIgnoreTypeNames, Console.WriteLine);
 
-                logger("Project Compilation Complete:" + sw.Elapsed.ToString());
 
-                sw.Restart();
-                logger("Method Collect Start");
+                var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect(InnerGenerator.NoExportTypes);
 
-                var (objectInfo, enumInfo, genericInfo, unionInfo) = collector.Collect(GeekGenerator.NoExportTypes);
-
+                logger("开始生成协议...");
                 //生成协议代码
-                new GeekGenerator().GenCode(compilation, collector.TargetTypes, serverOutput, output);
+                new CS.InnerGenerator().GenCode(compilation, collector.TargetTypes, serverOutput, output);
 
-                logger("Method Collect Complete:" + sw.Elapsed.ToString());
 
-                logger("Output Generation Start");
-                sw.Restart();
-
+                logger("开始生成formatter...");
                 //生成Formatter
                 if (!output.Equals("no"))
                 {
@@ -130,12 +122,12 @@ namespace MessagePackCompiler
 
                 if (objectInfo.Length == 0 && enumInfo.Length == 0 && genericInfo.Length == 0 && unionInfo.Length == 0)
                 {
-                    logger("Generated result is empty, unexpected result?");
+                    logger("生成结果为空，是否正确?");
                 }
             }
 
-            logger("Output Generation Complete:" + sw.Elapsed.ToString());
-            logger("end..........................................................");
+            logger("生成完成..........................................................\n");
+            logger("输入操作继续...");
         }
 
         /// <summary>

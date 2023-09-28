@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using MessagePackCompiler.CodeGenerator.CS;
 
-namespace MessagePackCompiler
+namespace MessagePackCompiler.CodeGenerator.TS
 {
     /// <summary>
     /// Scriban 对驼峰格式支持不友好
@@ -20,29 +21,25 @@ namespace MessagePackCompiler
         /// </summary>
         public string supercode
         {
-            get 
+            get
             {
-                if(string.IsNullOrEmpty(super))
+                if (string.IsNullOrEmpty(super))
                     return string.Empty;
                 else
-                    return ": " + super;
+                {
+                    if (ismsg)
+                    {
+                        return "implements " + super;
+                    }
+                    return "extends " + super;
+                }
             }
         }
 
-        public string sidcode
-        {
-            get
-            {
-                if(!string.IsNullOrEmpty(super) && !super.Equals(GeekGenerator.BaseMessage))
-                    return $"public new const int Sid = {sid}";
-                else
-                    return $"public const int Sid = {sid}";
-            }
-        }
 
         public int sid { get; set; }
 
-        public string atts{ get; set; }
+        public string atts { get; set; }
 
         public List<FieldTemplate> fields = new List<FieldTemplate>();
 
@@ -69,24 +66,17 @@ namespace MessagePackCompiler
     public class GeekEnumTemplate
     {
         public string fullname { get; set; }
+        public string name
+        {
+            get
+            {
+                var strs = fullname.Split(".");
+                return strs[strs.Length - 1];
+            }
+        }
         public string space { get; set; }
         public string enumcode { get; set; }
     }
-
-    public class PolymorphicInfo
-    {
-        public string basename { get; set; }
-
-        public string subname { get; set; }
-
-        public int subsid { get; set; }
-    }
-
-    public class PolymorphicInfoFactory
-    {
-        public List<PolymorphicInfo> infos = new List<PolymorphicInfo>();
-    }
-
 
     public class MsgInfo
     {

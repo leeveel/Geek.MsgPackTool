@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using MessagePackCompiler.CodeGenerator.CS;
+using MessagePackCompiler.Utils;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Scriban;
@@ -7,10 +9,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
-namespace MessagePackCompiler
+namespace MessagePackCompiler.CodeGenerator.TS
 {
-    public class GeekGenerator
+    public class InnerGenerator
     {
 
         public const string KeyAttribute = "MessagePack.KeyAttribute";
@@ -18,19 +21,31 @@ namespace MessagePackCompiler
         public static string BaseMessage = "Geek.Server.Message";
         public static List<string> NoExportTypes = new List<string>();
 
-        public static GeekGenerator Singleton = new GeekGenerator();
+        public static CS.InnerGenerator Singleton = new CS.InnerGenerator();
         //sub - parent
         private readonly Dictionary<int, string> sidDic = new Dictionary<int, string>();
         private readonly Dictionary<string, BaseTypeDeclarationSyntax> clsSyntaxDic = new Dictionary<string, BaseTypeDeclarationSyntax>();
-        private readonly PolymorphicInfoFactory polymorphicInfos = new PolymorphicInfoFactory();
-        private readonly List<PolymorphicInfo> finalClassList = new List<PolymorphicInfo>();
         private readonly MsgFactory msgFactory = new MsgFactory();
         private readonly List<ClassTemplate> clsTemps = new List<ClassTemplate>();
         private readonly List<GeekEnumTemplate> enumTemps = new List<GeekEnumTemplate>();
 
-        public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output, string clientOutput)
+        private readonly Dictionary<string, string> embeddedTypeMap = new Dictionary<string, string>()
         {
-            Console.WriteLine($"-----------GenCode start Count:{targetTypes.Length}------------");
+            {  "short","number"},
+            {  "int","number"},
+            {  "long","number"},
+            {  "ushort","number"},
+            {  "uint","number"},
+            {  "ulong","number"},
+            {  "float","number"},
+            {  "double","number"},
+            {  "bool","boolean"},
+            {  "byte","number"}, 
+            {  "string","string"}
+        };
+
+        public void GenCode(Compilation compilation, INamedTypeSymbol[] targetTypes, string output)
+        {
             GetAllEnumSyntax(compilation);
             GetAllClassSyntax(compilation);
 
@@ -50,7 +65,7 @@ namespace MessagePackCompiler
                 else if (type.TypeKind == TypeKind.Class)
                     clsTemp.typename = "class";
                 else if (type.TypeKind == TypeKind.Struct)
-                    clsTemp.typename = "struct";
+                    clsTemp.typename = "class";
                 else
                     throw new Exception($"unknown type:{type.Name}.{type.TypeKind}");
 
@@ -65,8 +80,6 @@ namespace MessagePackCompiler
                 //通过类型名字计算唯一hash
                 if (clsTemp.typename != "enum")
                 {
-                    //clsTemp.sid = (int)MurmurHash3.Hash32(, 666);
-                    //var nameBytes = System.Text.Encoding.UTF8.GetBytes(clsTemp.fullname); 
                     clsTemp.sid = (int)MurmurHash3.Hash(clsTemp.fullname, 27);
                 }
 
@@ -81,23 +94,8 @@ namespace MessagePackCompiler
                 {
                     if (!type.BaseType.ToString().Equals("object"))
                     {
-                        //注册子类多态信息
-                        clsTemp.super = type.BaseType.ToString();
-                        PolymorphicInfo info = new PolymorphicInfo();
-                        info.basename = clsTemp.super;
-                        info.subname = clsTemp.fullname;
-                        info.subsid = clsTemp.sid;
-                        polymorphicInfos.infos.Add(info);
-                    }
-                    else
-                    {
-                        //注册基类多态信息
-                        PolymorphicInfo info = new PolymorphicInfo();
-                        info.basename = clsTemp.fullname;
-                        info.subname = clsTemp.fullname;
-                        info.subsid = clsTemp.sid;
-                        polymorphicInfos.infos.Add(info);
-                        finalClassList.Add(info);
+                        var strs = type.BaseType.ToString().Split(".");
+                        clsTemp.super = strs[strs.Length - 1];
                     }
                 }
 
@@ -127,42 +125,23 @@ namespace MessagePackCompiler
 
             //清除并创建目录
             output.CreateDirectory();
-            if (!output.Equals("no"))
-                output.CreateDirectory();
-            if (!clientOutput.Equals("no"))
-                clientOutput.CreateDirectory();
 
-            //MsgFactory
-            var fctx = new TemplateContext();
-            fctx.LoopLimit = 0;
-            var fsobj = new ScriptObject();
-            fsobj.Import(msgFactory);
-            fctx.PushGlobal(fsobj);
-            Template msgTemp = Template.Parse(File.ReadAllText("Geek/MsgFactory.liquid"));
-            var msgstr = msgTemp.Render(fctx);
+            var outStr = new StringBuilder();
 
-            if (!output.Equals("no"))
-                File.WriteAllText($"{output}/MsgFactory.cs", msgstr);
-            if (!clientOutput.Equals("no"))
-                File.WriteAllText($"{clientOutput}/MsgFactory.cs", msgstr);
+            ////MsgFactory
+            //var fctx = new TemplateContext();
+            //fctx.LoopLimit = 0;
+            //var fsobj = new ScriptObject();
+            //fsobj.Import(msgFactory);
+            //fctx.PushGlobal(fsobj);
+            //var msgTemp = Scriban.Template.Parse(File.ReadAllText("Liquid/TS/MsgFactory.liquid"));
+            //var msgstr = msgTemp.Render(fctx);
+
+            //File.WriteAllText($"{output}/MsgFactory.ts", msgstr);
 
 
-            //生成多态注册器
-            RemoveNoSubClass();
-            var rctx = new TemplateContext();
-            rctx.LoopLimit = 0;
-            var rsobj = new ScriptObject();
-            rsobj.Import(polymorphicInfos);
-            rctx.PushGlobal(rsobj);
-            Template registerTemp = Template.Parse(File.ReadAllText("Geek/Register.liquid"));
-            var rstr = registerTemp.Render(rctx);
 
-            if (!output.Equals("no"))
-                File.WriteAllText($"{output}/PolymorphicRegisterGen.cs", rstr);
-            if (!clientOutput.Equals("no"))
-                File.WriteAllText($"{clientOutput}/PolymorphicRegisterGen.cs", rstr);
-
-            Template enumTemp = Template.Parse(File.ReadAllText("Geek/Enum.liquid"));
+            var enumTemp = Scriban.Template.Parse(File.ReadAllText("Liquid/TS/Enum.liquid"));
             foreach (var e in enumTemps)
             {
                 var ectx = new TemplateContext();
@@ -171,43 +150,29 @@ namespace MessagePackCompiler
                 esobj.Import(e);
                 ectx.PushGlobal(esobj);
                 var str = enumTemp.Render(ectx);
-                if (!output.Equals("no"))
-                    File.WriteAllText($"{output}/{e.fullname}.cs", str);
-                if (!clientOutput.Equals("no"))
-                    File.WriteAllText($"{clientOutput}/{e.fullname}.cs", str);
+
+                outStr.Append(str);
+
+                  //File.WriteAllText($"{output}/{e.fullname}.ts", str);
             }
 
-            Template template = Template.Parse(File.ReadAllText("Geek/Proto.liquid"));
+            var template = Scriban.Template.Parse(File.ReadAllText("Liquid/TS/Proto.liquid"));
             foreach (var cls in clsTemps)
             {
+                Console.WriteLine(cls.fullname);
                 var ctx = new TemplateContext();
                 ctx.LoopLimit = 0;
                 var sobj = new ScriptObject();
                 sobj.Import(cls);
                 ctx.PushGlobal(sobj);
                 var str = template.Render(ctx);
-                if (!output.Equals("no"))
-                    File.WriteAllText($"{output}/{cls.fullname}.cs", str);
-                if (!clientOutput.Equals("no"))
-                    File.WriteAllText($"{clientOutput}/{cls.fullname}.cs", str);
-            }
-        }
+                 
+                outStr.Append(str);
 
-        private void RemoveNoSubClass()
-        {
-            foreach (var pinfo in finalClassList)
-            {
-                bool found = false;
-                foreach (var p in polymorphicInfos.infos)
-                {
-                    if (pinfo != p && p.basename == pinfo.basename)
-                    {
-                        found = true;
-                    }
-                }
-                if (!found)
-                    polymorphicInfos.infos.Remove(pinfo);
+                // File.WriteAllText($"{output}/{cls.fullname}.ts", str);
             }
+           var finalStr = Scriban.Template.Parse(File.ReadAllText("Liquid/TS/Final.liquid")).Render(new { body  = outStr.ToString() });
+            File.WriteAllText($"{output}/proto.ts", finalStr);
         }
 
 
@@ -231,7 +196,7 @@ namespace MessagePackCompiler
                 foreach (var e in enums)
                 {
                     GeekEnumTemplate template = new GeekEnumTemplate();
-                    template.enumcode = e.ToFullString();
+                    template.enumcode = e.ToFullString().Replace("public", "export");
                     //Console.WriteLine("enumcode:" + template.enumcode);
                     template.space = e.GetNameSpace();
                     template.fullname = e.GetFullName();
@@ -247,9 +212,89 @@ namespace MessagePackCompiler
             foreach (var prop in props)
             {
                 if (prop.Identifier.ToString() == name)
-                    return prop.ToFullString();
+                {
+                    var start = "";
+                    var full = prop.ToFullString();
+                    if (full.Contains("public "))
+                        start += "public ";
+                    if (full.Contains("protected "))
+                        start += "protected ";
+                    if (full.Contains("private "))
+                        start += "private ";
+                    if (full.Contains("static "))
+                        start += "static ";
+                    if (full.Contains("const "))
+                        start += "const ";
+
+                    var tsType = GetTSType(prop.Type);
+                     
+                    return start + $"{name}:{tsType}{GetDefaultInit(tsType, prop.Initializer?.ToString())};";
+                }
             }
             throw new Exception($"can not find property [{name}] in {clsSyntax.GetFullName()}");
+        }
+
+        public string GetTSType(TypeSyntax type)
+        {
+            var defRet = "any";
+            if (type is GenericNameSyntax genType)
+            {
+                var typeName = genType.Identifier.ToString();
+                if (typeName == "Dictionary")
+                {
+                    var args = genType.TypeArgumentList.Arguments;
+                    if (args.Count == 2)
+                    {
+                        var t0 = GetTSType(genType.TypeArgumentList.Arguments[0]);
+                        var t1 = GetTSType(genType.TypeArgumentList.Arguments[1]);
+                        return $"Map<{t0},{t1}>";
+                    }
+                    return defRet;
+                }
+                else if (typeName == "List")
+                {
+                    var t0 = GetTSType(genType.TypeArgumentList.Arguments[0]); 
+                    return $"{t0}[]";
+                }
+            }
+
+            var tName = type.ToString();
+            if (embeddedTypeMap.TryGetValue(tName, out var v))
+            {
+                return v;
+            }
+
+            var enumT = enumTemps.Find(v => v.fullname.EndsWith("." + tName));
+           if(enumT!=null)
+            {
+                return enumT.name;
+            }
+
+            var classT = clsTemps.Find(v => v.fullname.EndsWith("." + tName));
+            if (classT != null)
+            {
+                return classT.name;
+            }
+
+            return defRet;
+        }
+
+        public string GetDefaultInit(string tsType,string defaultValue)
+        {
+            if(tsType.StartsWith("Map"))
+            {
+                return "=new Map()";
+            }
+            if (tsType.EndsWith("[]"))
+            {
+                return "=new Array()";
+            }
+
+            if(enumTemps.Find(v => v.fullname==tsType)!=null)
+            {
+                return defaultValue;
+            }
+            return "";
         }
 
     }

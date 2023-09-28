@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MessagePackCompiler
+namespace MessagePackCompiler.Utils
 {
     public class MurmurHash3
     {
@@ -80,7 +80,7 @@ namespace MessagePackCompiler
 
         static uint rotl32(uint x, byte r)
         {
-            return (x << r) | (x >> (32 - r));
+            return x << r | x >> 32 - r;
         }
     }
 }

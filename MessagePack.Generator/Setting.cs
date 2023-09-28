@@ -26,6 +26,11 @@ public class Setting
     public string ClientOutPath { set; get; }
 
     /// <summary>
+    /// TS代码导出路径
+    /// </summary>
+    public string TSOutPath { set; get; }
+
+    /// <summary>
     /// 服务器是否使用代码生成的Resovler
     /// </summary>
     public bool GeneratedFirst { set; get; }

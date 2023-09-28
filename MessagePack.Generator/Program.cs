@@ -1,22 +1,10 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Runtime.Loader;
-using System.Threading;
-using System.Threading.Tasks;
-using ConsoleAppFramework;
-using MessagePackCompiler;
 using Microsoft.Build.Locator;
 using Microsoft.Build.Logging;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace MessagePack.Generator
 {
@@ -35,12 +23,14 @@ namespace MessagePack.Generator
                 return;
             }
 
-            Console.WriteLine("请按需输入指令:");
-            Console.WriteLine("1.导出服务器");
-            Console.WriteLine("2.导出客户端");
-            Console.WriteLine("3.导出服务器+客户端");
             while (true)
             {
+                Console.WriteLine("请按需输入指令:");
+                Console.WriteLine("1.导出服务器");
+                Console.WriteLine("2.导出客户端");
+                Console.WriteLine("3.导出服务器+客户端");
+                Console.WriteLine("4.导出TS");
+
                 var key = Console.ReadKey().KeyChar;
                 Console.WriteLine("你输入了:" + key.ToString());
                 Task? task = null;
@@ -54,6 +44,9 @@ namespace MessagePack.Generator
                         break;
                     case '3':
                         task = Gen(3);
+                        break;
+                    case '4':
+                        task = Gen(4);
                         break;
                     default:
                         Console.WriteLine("输入指令错误");
@@ -85,6 +78,11 @@ namespace MessagePack.Generator
                 mpcArgument.ServerOutput = Setting.Ins.ServerOutPath;
                 mpcArgument.ClientOutput = Setting.Ins.ClientOutPath;
             }
+            else if (model == 4)
+            {
+                mpcArgument.targetLangType = TargetLanguageType.TS;
+                mpcArgument.TSOutput = Setting.Ins.TSOutPath;
+            }
             else
             {
                 Console.WriteLine("输入指令错误");
@@ -96,10 +94,20 @@ namespace MessagePack.Generator
 
         public static async Task RunAsync(MpcArgument args)
         {
-            GeekGenerator.BaseMessage = args.BaseMessageName;
-            GeekGenerator.NoExportTypes = new List<string>();
-            if (args.NoExportTypes != null)
-                GeekGenerator.NoExportTypes.AddRange(args.NoExportTypes);
+            if (args.targetLangType == TargetLanguageType.CS)
+            {
+                MessagePackCompiler.CodeGenerator.CS.InnerGenerator.BaseMessage = args.BaseMessageName;
+                MessagePackCompiler.CodeGenerator.CS.InnerGenerator.NoExportTypes = new List<string>();
+                if (args.NoExportTypes != null)
+                    MessagePackCompiler.CodeGenerator.CS.InnerGenerator.NoExportTypes.AddRange(args.NoExportTypes);
+            }
+            if (args.targetLangType == TargetLanguageType.TS)
+            {
+                MessagePackCompiler.CodeGenerator.TS.InnerGenerator.BaseMessage = args.BaseMessageName;
+                MessagePackCompiler.CodeGenerator.TS.InnerGenerator.NoExportTypes = new List<string>();
+                if (args.NoExportTypes != null)
+                    MessagePackCompiler.CodeGenerator.TS.InnerGenerator.NoExportTypes.AddRange(args.NoExportTypes);
+            }
 
             Workspace? workspace = null;
             try
@@ -114,17 +122,31 @@ namespace MessagePack.Generator
                 {
                     (workspace, compilation) = await OpenMSBuildProjectAsync(args.Input, CancellationToken.None);
                 }
-                await new CodeGenerator(x => Console.WriteLine(x), CancellationToken.None)
-                    .GenerateFileAsync(
-                        compilation,
-                        args.ClientOutput,
-                        args.ServerOutput,
-                        args.GeneratedFirst,
-                        args.ResolverName,
-                        args.Namespace,
-                        args.UseMapMode,
-                        args.MultipleIfDirectiveOutputSymbols,
-                        null).ConfigureAwait(false);
+                if (args.targetLangType == TargetLanguageType.CS)
+                {
+                    await new MessagePackCompiler.CodeGenerator.CS.CodeGenerator(x => Console.WriteLine(x), CancellationToken.None)
+                        .GenerateFileAsync(
+                            compilation,
+                            args.ClientOutput,
+                            args.ServerOutput,
+                            args.GeneratedFirst,
+                            args.ResolverName,
+                            args.Namespace,
+                            args.UseMapMode,
+                            args.MultipleIfDirectiveOutputSymbols,
+                            null).ConfigureAwait(false);
+                }
+                else if (args.targetLangType == TargetLanguageType.TS)
+                {
+                    await new MessagePackCompiler.CodeGenerator.TS.CodeGenerator(x => Console.WriteLine(x), CancellationToken.None)
+                        .GenerateFileAsync(
+                            compilation,
+                            args.TSOutput,
+                            args.Namespace,
+                            args.UseMapMode,
+                            args.MultipleIfDirectiveOutputSymbols,
+                            null).ConfigureAwait(false);
+                }
             }
             catch (Exception e)
             {
@@ -144,6 +166,8 @@ namespace MessagePack.Generator
                 var logger = new ConsoleLogger(Microsoft.Build.Framework.LoggerVerbosity.Quiet);
                 var project = await workspace.OpenProjectAsync(projectPath, logger, null, cancellationToken);
                 var compilation = await project.GetCompilationAsync(cancellationToken);
+
+
                 if (compilation is null)
                 {
                     throw new NotSupportedException("The project does not support creating Compilation.");

@@ -282,12 +282,12 @@ namespace MessagePackCompiler.CodeAnalysis
                 .Where(x =>
                        ((x.TypeKind == TypeKind.Interface) && x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.UnionAttribute)))
                     || ((x.TypeKind == TypeKind.Class && x.IsAbstract) && x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.UnionAttribute)))
-                    || ((x.TypeKind == TypeKind.Class) && x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.MessagePackObjectAttribute)))
-                    || ((x.TypeKind == TypeKind.Struct) && x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.MessagePackObjectAttribute)))
+                    || ((x.TypeKind == TypeKind.Class && !x.IsAbstract) && !x.ApproximatelyEqual(typeReferences.KeyAttribute) && !x.ApproximatelyEqual(typeReferences.SerializeAttribute) && !x.ApproximatelyEqual(typeReferences.MessagePackObjectAttribute) && !x.ApproximatelyEqual(typeReferences.MessagePackFormatterAttribute) && !x.ApproximatelyEqual(typeReferences.MessagePackFormatterAttribute) && !x.ApproximatelyEqual(typeReferences.IgnoreAttribute) && !x.ApproximatelyEqual(typeReferences.UnionAttribute) && !x.ApproximatelyEqual(typeReferences.SerializationConstructorAttribute))
+                    || ((x.TypeKind == TypeKind.Struct))
                     || ((x.TypeKind == TypeKind.Class) && x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.SerializeAttribute)))
                     || ((x.TypeKind == TypeKind.Struct) && x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.SerializeAttribute))))
                 .ToArray();
-        }
+        } //&& x.GetAttributes().Any(x2 => x2.AttributeClass.ApproximatelyEqual(typeReferences.MessagePackObjectAttribute))
 
         private void ResetWorkspace()
         {
@@ -305,10 +305,10 @@ namespace MessagePackCompiler.CodeAnalysis
 
             foreach (INamedTypeSymbol item in this.targetTypes)
             {
-                if(NoExportTypes.IndexOf(item.ToString())<0)
+                if (NoExportTypes.IndexOf(item.ToString()) < 0)
                     this.CollectCore(item);
             }
- 
+
             return (
                 this.collectedObjectInfo.OrderBy(x => x.FullName).ToArray(),
                 this.collectedEnumInfo.OrderBy(x => x.FullName).ToArray(),
@@ -594,14 +594,14 @@ namespace MessagePackCompiler.CodeAnalysis
             var isClass = !type.IsValueType;
             var isOpenGenericType = type.IsGenericType;
 
-            AttributeData contractAttr = type.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.MessagePackObjectAttribute))
-                ?? throw new MessagePackGeneratorResolveFailedException("Serialization Object must mark MessagePackObjectAttribute." + " type: " + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            //AttributeData contractAttr = type.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.MessagePackObjectAttribute))
+            //    ?? throw new MessagePackGeneratorResolveFailedException("Serialization Object must mark MessagePackObjectAttribute." + " type: " + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
 
             var isIntKey = true;
             var intMembers = new Dictionary<int, MemberSerializationInfo>();
             var stringMembers = new Dictionary<string, MemberSerializationInfo>();
 
-            if (this.isForceUseMap || (contractAttr.ConstructorArguments[0] is { Value: bool firstConstructorArgument } && firstConstructorArgument))
+            if (true)//(this.isForceUseMap || (contractAttr.ConstructorArguments[0] is { Value: bool firstConstructorArgument } && firstConstructorArgument))
             {
                 // All public members are serialize target except [Ignore] member.
                 isIntKey = false;

@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MessagePackCompiler
+namespace MessagePackCompiler.Utils
 {
     public static class Helper
     {
@@ -60,7 +60,7 @@ namespace MessagePackCompiler
                     return true;
                 }
 
-                return TryGetParentSyntax<T>(syntaxNode, out result);
+                return TryGetParentSyntax(syntaxNode, out result);
             }
             catch
             {
@@ -82,7 +82,7 @@ namespace MessagePackCompiler
 
         public static string GetFullName(this BaseTypeDeclarationSyntax syntax)
         {
-            if (TryGetParentSyntax(syntax, out NamespaceDeclarationSyntax namespaceDeclarationSyntax))
+            if (syntax.TryGetParentSyntax(out NamespaceDeclarationSyntax namespaceDeclarationSyntax))
             {
                 var namespaceName = namespaceDeclarationSyntax.Name.ToString();
                 var fullClassName = namespaceName + "." + syntax.Identifier.ToString();
@@ -93,7 +93,7 @@ namespace MessagePackCompiler
 
         public static string GetNameSpace(this BaseTypeDeclarationSyntax syntax)
         {
-            if (TryGetParentSyntax(syntax, out NamespaceDeclarationSyntax namespaceDeclarationSyntax))
+            if (syntax.TryGetParentSyntax(out NamespaceDeclarationSyntax namespaceDeclarationSyntax))
                 return namespaceDeclarationSyntax.Name.ToString();
             return null;
         }
