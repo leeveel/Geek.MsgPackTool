@@ -25,5 +25,15 @@ namespace Geek.Server.Proto
 				throw new Exception($"can not find msg type :{msgId}");
 		}
 
+		public static BaseMessage CreateMsg(int msgId)
+        {
+            return msgId switch
+            {
+				{{~ for msg in msgs ~}}
+			    {{msg.sid}} => new {{msg.typename}}(),
+			    {{~ end ~}}
+                _ => null,
+            };
+        }  
 	}
 }
